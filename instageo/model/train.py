@@ -234,19 +234,19 @@ class PrithviSegmentationModule(pl.LightningModule):
                 metrics_dict["roc_auc"] = roc_auc
 
         # Log global metrics
-        self.log("val_aAcc", metrics_dict["acc"], prog_bar=True, logger=True)
+        self.log("val_aAcc", metrics_dict["acc"], prog_bar=True, logger=True, sync_dist=True)
         if "roc_auc" in metrics_dict:
-            self.log("val_roc_auc", metrics_dict["roc_auc"], prog_bar=True, logger=True)
-        self.log("val_IoU", metrics_dict["iou"], prog_bar=True, logger=True)
+            self.log("val_roc_auc", metrics_dict["roc_auc"], prog_bar=True, logger=True, sync_dist=True)
+        self.log("val_IoU", metrics_dict["iou"], prog_bar=True, logger=True, sync_dist=True)
 
         for idx, value in enumerate(metrics_dict["iou_per_class"]):
-            self.log(f"val_IoU_{idx}", value, logger=True)
+            self.log(f"val_IoU_{idx}", value, logger=True, sync_dist=True)
         for idx, value in enumerate(metrics_dict["acc_per_class"]):
-            self.log(f"val_Acc_{idx}", value, logger=True)
+            self.log(f"val_Acc_{idx}", value, logger=True, sync_dist=True)
         for idx, value in enumerate(metrics_dict["precision_per_class"]):
-            self.log(f"val_Precision_{idx}", value, logger=True)
+            self.log(f"val_Precision_{idx}", value, logger=True, sync_dist=True)
         for idx, value in enumerate(metrics_dict["recall_per_class"]):
-            self.log(f"val_Recall_{idx}", value, logger=True)
+            self.log(f"val_Recall_{idx}", value, logger=True, sync_dist=True)
 
     def on_test_epoch_end(self) -> None:
         """Compute and log global test metrics at the end of the epoch."""
