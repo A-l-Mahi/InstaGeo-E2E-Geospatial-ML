@@ -311,6 +311,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_aAcc",
@@ -319,6 +320,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_roc_auc",
@@ -327,6 +329,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_mIoU",
@@ -344,6 +347,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
+                sync_dist=True,
             )
         for idx, value in enumerate(out["acc_per_class"]):
             self.log(
@@ -353,6 +357,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
+                sync_dist=True,
             )
         for idx, value in enumerate(out["precision_per_class"]):
             self.log(
@@ -362,6 +367,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
+                sync_dist=True,
             )
         for idx, value in enumerate(out["recall_per_class"]):
             self.log(
@@ -371,6 +377,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
+                sync_dist=True,
             )
 
     def compute_metrics(
