@@ -161,6 +161,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         # Update confusion matrix and accumulate data for ROC-AUC for global metrics computation
         self._update_confusion_matrix(outputs, labels, "test")
@@ -262,21 +263,21 @@ class PrithviSegmentationModule(pl.LightningModule):
                 metrics_dict["roc_auc"] = roc_auc
 
         # Log global metrics
-        self.log("test_aAcc", metrics_dict["acc"], prog_bar=True, logger=True)
+        self.log("test_aAcc", metrics_dict["acc"], prog_bar=True, logger=True, sync_dist=True)
         if "roc_auc" in metrics_dict:
             self.log(
-                "test_roc_auc", metrics_dict["roc_auc"], prog_bar=True, logger=True
+                "test_roc_auc", metrics_dict["roc_auc"], prog_bar=True, logger=True, sync_dist=True 
             )
-        self.log("test_IoU", metrics_dict["iou"], prog_bar=True, logger=True)
+        self.log("test_IoU", metrics_dict["iou"], prog_bar=True, logger=True, sync_dist=True    )
 
         for idx, value in enumerate(metrics_dict["iou_per_class"]):
-            self.log(f"test_IoU_{idx}", value, logger=True)
+            self.log(f"test_IoU_{idx}", value, logger=True, sync_dist=True)
         for idx, value in enumerate(metrics_dict["acc_per_class"]):
-            self.log(f"test_Acc_{idx}", value, logger=True)
+            self.log(f"test_Acc_{idx}", value, logger=True, sync_dist=True)
         for idx, value in enumerate(metrics_dict["precision_per_class"]):
-            self.log(f"test_Precision_{idx}", value, logger=True)
+            self.log(f"test_Precision_{idx}", value, logger=True, sync_dist=True)
         for idx, value in enumerate(metrics_dict["recall_per_class"]):
-            self.log(f"test_Recall_{idx}", value, logger=True)
+            self.log(f"test_Recall_{idx}", value, logger=True, sync_dist=True)
 
     def _compute_metrics_from_confusion_matrix(
         self, confusion_matrix: torch.Tensor
@@ -389,6 +390,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_aAcc",
@@ -397,6 +399,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_roc_auc",
@@ -405,6 +408,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_IoU",
@@ -413,6 +417,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         for idx, value in enumerate(out["iou_per_class"]):
             self.log(
@@ -422,6 +427,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
+                sync_dist=True,
             )
         for idx, value in enumerate(out["acc_per_class"]):
             self.log(
@@ -431,6 +437,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
+                sync_dist=True,
             )
         for idx, value in enumerate(out["precision_per_class"]):
             self.log(
@@ -440,6 +447,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
+                sync_dist=True,
             )
         for idx, value in enumerate(out["recall_per_class"]):
             self.log(
@@ -449,6 +457,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
+                sync_dist=True,222
             )
 
     def compute_metrics(
@@ -909,6 +918,7 @@ class PrithviRegressionModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_RMSE",
@@ -917,6 +927,7 @@ class PrithviRegressionModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_MAE",
@@ -925,6 +936,7 @@ class PrithviRegressionModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
         self.log(
             f"{stage}_R2",
@@ -933,6 +945,7 @@ class PrithviRegressionModule(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
 
     def compute_metrics(
