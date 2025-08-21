@@ -30,6 +30,7 @@ class PrithviSegmentationModule(pl.LightningModule):
         ignore_index: int = -100,
         weight_decay: float = 1e-2,
         depth: int | None = None,
+        model_version: str = "v1",
     ) -> None:
         """Initialization.
 
@@ -47,6 +48,8 @@ class PrithviSegmentationModule(pl.LightningModule):
             weight_decay (float): Weight decay for L2 regularization.
             depth (int | None): Number of transformer layers to use. If None, uses default
                 from config.
+            model_version (str): Model version to use. "v1" for Prithvi-EO-1.0-100M,
+                "v2" for Prithvi-EO-2.0-300M. Defaults to "v1".
         """
         super().__init__()
         self.net = PrithviSeg(
@@ -55,6 +58,7 @@ class PrithviSegmentationModule(pl.LightningModule):
             temporal_step=temporal_step,
             freeze_backbone=freeze_backbone,
             depth=depth,
+            model_version=model_version,
         )
         weight_tensor = torch.tensor(class_weights).float() if class_weights else None
         self.criterion = nn.CrossEntropyLoss(
@@ -551,6 +555,7 @@ class PrithviRegressionModule(pl.LightningModule):
         ignore_index: int = -100,
         depth: int | None = None,
         log_transform: bool = False,
+        model_version: str = "v1",
     ) -> None:
         """Initialization.
 
@@ -567,6 +572,8 @@ class PrithviRegressionModule(pl.LightningModule):
             depth (int | None): Number of transformer layers to use. If None, uses default
                 from config.
             log_transform (bool): Whether to apply log transformation to target values.
+            model_version (str): Model version to use. "v1" for Prithvi-EO-1.0-100M,
+                "v2" for Prithvi-EO-2.0-300M. Defaults to "v1".
         """
         super().__init__()
         self.net = PrithviSeg(
@@ -575,6 +582,7 @@ class PrithviRegressionModule(pl.LightningModule):
             temporal_step=temporal_step,
             freeze_backbone=freeze_backbone,
             depth=depth,
+            model_version=model_version,
         )
 
         # Choose loss function

@@ -44,7 +44,7 @@ def sliding_window_inference(
 
     Performs sliding window inference on large inputs using a given model with batching,
     and reassemble the output to match the original image size.
-
+                                    
     Args:
         image_path: Path to the large image.
         model: Trained model for inference.

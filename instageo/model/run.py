@@ -176,6 +176,7 @@ def create_model(
             ignore_index=cfg.train.ignore_index,
             depth=cfg.model.get("depth", None),
             log_transform=getattr(cfg.train, "log_transform", False),
+            model_version=cfg.model.get("model_version", "v1"),
         )
     else:
         return PrithviSegmentationModule(
@@ -188,6 +189,7 @@ def create_model(
             ignore_index=cfg.train.ignore_index,
             weight_decay=cfg.train.weight_decay,
             depth=cfg.model.get("depth", None),
+            model_version=cfg.model.get("model_version", "v1"),
         )
 
 
