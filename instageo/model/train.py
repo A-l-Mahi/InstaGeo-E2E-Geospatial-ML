@@ -457,7 +457,7 @@ class PrithviSegmentationModule(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
-                sync_dist=True,222
+                sync_dist=True,
             )
 
     def compute_metrics(
