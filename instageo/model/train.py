@@ -800,9 +800,9 @@ class PrithviRegressionModule(pl.LightningModule):
         # Compute global metrics from accumulated statistics
         metrics_dict = self._compute_regression_metrics_from_accumulation("val")
 
-        self.log("val_RMSE", metrics_dict["rmse"], prog_bar=True, logger=True)
-        self.log("val_MAE", metrics_dict["mae"], prog_bar=True, logger=True)
-        self.log("val_R2", metrics_dict["r2"], prog_bar=True, logger=True)
+        self.log("val_RMSE", metrics_dict["rmse"], prog_bar=True, logger=True, sync_dist=True)
+        self.log("val_MAE", metrics_dict["mae"], prog_bar=True, logger=True, sync_dist=True)
+        self.log("val_R2", metrics_dict["r2"], prog_bar=True, logger=True, sync_dist=True  )
 
     def on_test_epoch_end(self) -> None:
         """Compute and log global test metrics at the end of the epoch."""
