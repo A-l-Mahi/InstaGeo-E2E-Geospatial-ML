@@ -22,7 +22,6 @@
 import os
 import time
 from pathlib import Path
-import json
 
 import numpy as np
 import requests  # type: ignore
@@ -119,11 +118,7 @@ class Norm2D(nn.Module):
 
 
 class PrithviSeg(nn.Module):
-    """Prithvi Segmentation Model with support for multiple versions.
-    
-    Supports both Prithvi-EO-1.0-100M and Prithvi-EO-2.0-300M models.
-    The model automatically handles architectural differences between versions.
-    """
+    """Prithvi Segmentation Model."""
 
     def __init__(
         self,
@@ -132,7 +127,6 @@ class PrithviSeg(nn.Module):
         num_classes: int = 2,
         freeze_backbone: bool = True,
         depth: int | None = None,
-        model_version: str = "v1",  # "v1" for 100M, "v2" for 300M
     ) -> None:
         """Initialize the PrithviSeg model.
 
@@ -147,49 +141,25 @@ class PrithviSeg(nn.Module):
             freeze_backbone (bool): Flag to freeze ViT transformer backbone weights.
             depth (int | None): Number of transformer layers to use. If None, uses default
                 from config.
-            model_version (str): Model version to use. "v1" for Prithvi-EO-1.0-100M,
-                "v2" for Prithvi-EO-2.0-300M. Defaults to "v1".
         """
         super().__init__()
-        
-        # Model version configuration
-        if model_version not in ["v1", "v2"]:
-            raise ValueError(f"Unsupported model version: {model_version}. Use 'v1' or 'v2'.")
-        
-        self.model_version = model_version
-        
-        # Setup paths and URLs based on model version
         weights_dir = Path.home() / ".instageo" / "prithvi"
         weights_dir.mkdir(parents=True, exist_ok=True)
-        
-        if model_version == "v1":
-            weights_path = weights_dir / "Prithvi_EO_V1_100M.pt"
-            cfg_path = weights_dir / "config.yaml"
-            weights_url = "https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-1.0-100M/resolve/main/Prithvi_EO_V1_100M.pt?download=true"
-            config_url = "https://huggingface.co/ibm-nasa-geospatial/Prithvi-100M/raw/main/config.yaml"
-        else:  # v2
-            weights_path = weights_dir / "Prithvi_EO_V2_300M.pt"
-            cfg_path = weights_dir / "config.json"
-            weights_url = "https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M/resolve/main/pytorch_model.bin?download=true"
-            config_url = "https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M/raw/main/config.json"
-        
-        # Download model files
-        download_file(weights_url, weights_path)
-        download_file(config_url, cfg_path)
+        weights_path = weights_dir / "Prithvi_EO_V1_100M.pt"
+        cfg_path = weights_dir / "config.yaml"
+        download_file(
+            "https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-1.0-100M/resolve/main/Prithvi_EO_V1_100M.pt?download=true",  # noqa
+            weights_path,
+        )
+        download_file(
+            "https://huggingface.co/ibm-nasa-geospatial/Prithvi-100M/raw/main/config.yaml",  # noqa
+            cfg_path,
+        )
         checkpoint = torch.load(weights_path, map_location="cpu")
-        
-        # Load configuration based on model version
-        if model_version == "v1":
-            with open(cfg_path) as f:
-                model_config = yaml.safe_load(f)
-            model_args = model_config["model_args"]
-        else:  # v2
-            with open(cfg_path) as f:
-                model_config = json.load(f)
-            model_args = model_config["pretrained_cfg"]
-            # Convert v2 config format to match v1 expectations
-            model_args["tubelet_size"] = model_args["patch_size"][0]  # First element of 3D patch
-            model_args["patch_size"] = model_args["patch_size"][1]   # Spatial patch size
+        with open(cfg_path) as f:
+            model_config = yaml.safe_load(f)
+
+        model_args = model_config["model_args"]
 
         model_args["num_frames"] = temporal_step
         model_args["img_size"] = image_size
@@ -203,43 +173,20 @@ class PrithviSeg(nn.Module):
                 param.requires_grad = False
         # Harmonize checkpoint keys with model's state_dict
         filtered_checkpoint_state_dict = {}
-        
-        if model_version == "v1":
-            # V1 uses 'encoder.' prefix in checkpoint
-            for key, value in checkpoint.items():
-                if key.startswith("encoder."):
-                    new_key = key[len("encoder.") :]
-                    # Only keep blocks from 0 to depth-1
-                    if new_key.startswith("blocks."):
-                        block_idx = int(new_key.split(".")[1])
-                        if block_idx < model_args["depth"]:
-                            filtered_checkpoint_state_dict[new_key] = value
-                    else:
+        for key, value in checkpoint.items():
+            if key.startswith("encoder."):
+                new_key = key[len("encoder.") :]
+                # Only keep blocks from 0 to depth-1
+                if new_key.startswith("blocks."):
+                    block_idx = int(new_key.split(".")[1])
+                    if block_idx < model_args["depth"]:
                         filtered_checkpoint_state_dict[new_key] = value
-        else:  # v2
-            # V2 might have different key structure - handle both cases
-            for key, value in checkpoint.items():
-                if key.startswith("encoder."):
-                    # If v2 also uses 'encoder.' prefix
-                    new_key = key[len("encoder.") :]
-                    if new_key.startswith("blocks."):
-                        block_idx = int(new_key.split(".")[1])
-                        if block_idx < model_args["depth"]:
-                            filtered_checkpoint_state_dict[new_key] = value
-                    else:
-                        filtered_checkpoint_state_dict[new_key] = value
-                elif not key.startswith("decoder."):
-                    # Direct keys (no encoder prefix) - filter blocks
-                    if key.startswith("blocks."):
-                        block_idx = int(key.split(".")[1])
-                        if block_idx < model_args["depth"]:
-                            filtered_checkpoint_state_dict[key] = value
-                    else:
-                        filtered_checkpoint_state_dict[key] = value
+                else:
+                    filtered_checkpoint_state_dict[new_key] = value
         filtered_checkpoint_state_dict["pos_embed"] = (
             torch.from_numpy(
                 get_3d_sincos_pos_embed(
-                    model_args["embed_dim"],  # Use dynamic embed_dim instead of hardcoded 768
+                    768,
                     (temporal_step, image_size // 16, image_size // 16),
                     cls_token=True,
                 )
@@ -249,7 +196,7 @@ class PrithviSeg(nn.Module):
         )
         _ = model.load_state_dict(filtered_checkpoint_state_dict)
 
-        self.prithvi_backbone = model
+        self.prithvi_100M_backbone = model
 
         def upscaling_block(in_channels: int, out_channels: int) -> nn.Module:
             """Upscaling block.
@@ -300,7 +247,7 @@ class PrithviSeg(nn.Module):
         Returns:
             torch.Tensor: Output tensor after image segmentation.
         """
-        features = self.prithvi_backbone(img)
+        features = self.prithvi_100M_backbone(img)
         # drop cls token
         reshaped_features = features[:, 1:, :]
         feature_img_side_length = int(
