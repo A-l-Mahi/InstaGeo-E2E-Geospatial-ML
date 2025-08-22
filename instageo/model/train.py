@@ -820,9 +820,9 @@ class PrithviRegressionModule(pl.LightningModule):
         # Compute global metrics from accumulated statistics
         metrics_dict = self._compute_regression_metrics_from_accumulation("test")
 
-        self.log("test_RMSE", metrics_dict["rmse"], prog_bar=True, logger=True, sync_dist=True)
-        self.log("test_MAE", metrics_dict["mae"], prog_bar=True, logger=True, sync_dist=True)
-        self.log("test_R2", metrics_dict["r2"], prog_bar=True, logger=True, sync_dist=True)
+        self.log("test_RMSE", metrics_dict["rmse"], prog_bar=True, logger=True)
+        self.log("test_MAE", metrics_dict["mae"], prog_bar=True, logger=True)
+        self.log("test_R2", metrics_dict["r2"], prog_bar=True, logger=True)
 
     def _compute_regression_metrics_from_accumulation(self, stage: str) -> dict:
         """Compute regression metrics from accumulated statistics."""
